@@ -1,0 +1,1 @@
+Web application where users will be able to search a specified gene for specific type(s) of transcript effects. These search results will then be compared to data in the 1000 Genomes data set and individuals who carry the mutation will be returned.
