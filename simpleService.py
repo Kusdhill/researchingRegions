@@ -16,6 +16,7 @@ import json
 # communicating with other web services.
 
 import ga4gh.client as client
+import ga4gh.protocol as p
 import collections
 import requests
 
@@ -28,13 +29,7 @@ def hello_world():
 	return 'Hello World! This is a test.'
 
 
-
-
 #####################################################################################################################################################
-
-
-
-
 
 
 ga4ghBaseURL = "http://1kgenomes.ga4gh.org"
@@ -46,6 +41,9 @@ def gene_route(geneName):
 
 	dataset = c.search_datasets().next()
 
+	resultCount = 0
+	pageCount = 1
+
 	for functionalVariantSet in c.search_variant_sets(dataset.id):
 		if functionalVariantSet.name == "functional-annotation":
 			functionalAnnotation = functionalVariantSet
@@ -53,39 +51,68 @@ def gene_route(geneName):
 	functionalAnnotationSet = c.search_variant_annotation_sets(variant_set_id=functionalAnnotation.id).next()
 
 
-
-
-
+	searchOntologyTerm = 'SO:0001630'
 	geneList = []
-
 	geneAndTermDict = collections.OrderedDict()
 
+
+	# Linked to Breast Cancer
 	geneAndTermDict['name'] = 'BRCA1'
 	geneAndTermDict['start'] = 43044295
 	geneAndTermDict['end'] = 43170245
 	geneAndTermDict['chrome'] = '17'
-	geneAndTermDict['term'] = 'SO:0001630'
+	geneAndTermDict['term'] = searchOntologyTerm
 
 	geneList.append(geneAndTermDict)
 	geneAndTermDict = collections.OrderedDict()
 
 
-
-
+	# Linked to Breast Cancer
 	geneAndTermDict['name'] = 'BRCA2'
 	geneAndTermDict['start'] = 32314862
-	geneAndTermDict['end'] = 32400266
+	geneAndTermDict['end'] = 32363334#32400266
 	geneAndTermDict['chrome'] = '13'
-	geneAndTermDict['term'] = 'SO:0001630'
+	geneAndTermDict['term'] = searchOntologyTerm
+
+	geneList.append(geneAndTermDict)
+	geneAndTermDict = collections.OrderedDict()
+
+
+	# Linked to Alzheimer's Disease
+	geneAndTermDict['name'] = 'APP'
+	geneAndTermDict['start'] = 25880550
+	geneAndTermDict['end'] = 26170820
+	geneAndTermDict['chrome'] = '21'
+	geneAndTermDict['term'] = searchOntologyTerm
+
+	geneList.append(geneAndTermDict)
+	geneAndTermDict = collections.OrderedDict()
+
+
+	# Linked to Prostate Cancer
+	geneAndTermDict['name'] = 'HOXB13'
+	geneAndTermDict['start'] = 48724763
+	geneAndTermDict['end'] = 48729178
+	geneAndTermDict['chrome'] = '17'
+	geneAndTermDict['term'] = searchOntologyTerm
+
+	geneList.append(geneAndTermDict)
+	geneAndTermDict = collections.OrderedDict()
+
+
+	# Linked to Parkinson's Disease
+	geneAndTermDict['name'] = 'SNCA'
+	geneAndTermDict['start'] = 89724099
+	geneAndTermDict['end'] = 89838315
+	geneAndTermDict['chrome'] = '4'
+	geneAndTermDict['term'] = searchOntologyTerm
 
 	geneList.append(geneAndTermDict)
 	geneAndTermDict = collections.OrderedDict()
 
 
 
-
-
-	print(geneList[1]['name'])
+	#print(geneList[1]['name'])
 
 	geneIndex = -1
 	for i in range(0,len(geneList)):
@@ -94,11 +121,6 @@ def gene_route(geneName):
 
 
 	#print(geneList[0]['name'])
-
-
-
-
-
 
 
 
@@ -134,44 +156,65 @@ def gene_route(geneName):
 
 
 
-
-
 	for phaseVariantSet in c.search_variant_sets(dataset.id):
 		if phaseVariantSet.name == "phase3-release":
 			phaseAnnotation = phaseVariantSet
 
 	allCallSets = list(c.search_call_sets(phaseAnnotation.id))
+	#print(allCallSets[0])
 
 	callSetIds = []
 	for callSet in allCallSets:
 		callSetIds.append(str(callSet.id))
+
 
 	phaseAnnotationSetList = []
 	for i in range(0,len(functionalList)):
 		searchResults = c.search_variants(phaseAnnotation.id, start=functionalList[i]['start'], end=functionalList[i]['end'], reference_name=functionalList[i]['chrome'], call_set_ids=callSetIds)
 		for results in searchResults:
 			phaseAnnotationSetList.append(results)
-			
-	#print(len(phaseAnnotationSetList))
 
-	matchResults = []
-	lolList = []
-	#lolResults = collections.OrderedDict()
+
+
+	matchList = []
+
 	for i in range(0,len(phaseAnnotationSetList)):
 		for j in range(0,len(phaseAnnotationSetList[i].calls)):
 			if phaseAnnotationSetList[i].calls[j].genotype[0]==1 or phaseAnnotationSetList[i].calls[j].genotype[1]==1:
+				
+				resultCount+=1
+
+				matchResults = {}
 				#print(phaseAnnotationSetList[i].calls[j])
-			
-				matchResults.append(unicode(phaseAnnotationSetList[i].calls[j].call_set_name+" has "+str(termList[i])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
-				lolResults = {'person' :  phaseAnnotationSetList[i].calls[j].call_set_name, 'term' : termList[i], 'gene' : geneList[geneIndex]['name'], 'start' : str(functionalList[i]['start']), 'end' : str(functionalList[i]['end'])}
-				lolList.append(lolResults)
+				
+				print(unicode(phaseAnnotationSetList[i].calls[j].call_set_name+" has "+str(termList[i])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
+				
+				
+				#for ids in callSetIds:
+				bioSamplesList = []
+				for k in range(0,len(allCallSets)):
+					if phaseAnnotationSetList[i].calls[j].call_set_id == allCallSets[k].id:
+						bioSamplesList.append(c.get_bio_sample(allCallSets[k].bio_sample_id))
 
 
 
+				for x in range(0,len(bioSamplesList)):
+					matchResults['biosample'] = p.toJsonDict(bioSamplesList[x])
+				matchResults['term']   = termList[i]
+				matchResults['start']  = str(functionalList[i]['start'])
+				matchResults['end']    = str(functionalList[i]['end'])
+				matchResults['result_number'] = resultCount
 
-	#return flask.jsonify({"gene_name": gene_name, "matches": matches})
-	#return flask.jsonify({'matches' : matchResults, 'lols' : 'lols'})
-	return json.dumps(lolList)
+				if resultCount==100:
+					pageCount+=1
+					print("100 results")
+
+				#print(matchResults)
+				
+				matchList.append(matchResults)
+
+
+	return flask.jsonify({'matches' : matchList, 'gene' : geneList[geneIndex]['name']})
 
 if __name__ == '__main__':
 	app.debug = True  # helps us figure out if something went wrong
