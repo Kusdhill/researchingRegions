@@ -28,6 +28,7 @@ def pageOneResults(geneName, soTerm):
 def pagedResults(geneName, soTerm,  pageNumber):
 	resultCount = 0
 	pageCount = 1
+
 	searchOntologyTerm = str(soTerm)
 	geneList = []
 	geneAndTermDict = collections.OrderedDict()
@@ -88,16 +89,10 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	geneAndTermDict = collections.OrderedDict()
 
 
-
-	#print(geneList[1]['name'])
-
 	geneIndex = -1
 	for i in range(0,len(geneList)):
 		if geneName==geneList[i]['name']:
 			geneIndex = i
-
-
-	#print(geneList[0]['name'])
 
 
 
@@ -112,11 +107,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		for i in range(0,len(annotation.transcript_effects)):
 			for j in range(0,len(annotation.transcript_effects[i].effects)):
 				termList.append(annotation.transcript_effects[i].effects[j].term)
-				#print(annotation)
 				idList.append(annotation.variant_id)
 
-	#print(idList)
-	#print(termList)
 
 	functionalList = []
 	for i in range(0,len(idList)):
@@ -131,14 +123,11 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		functionalList.append(functionalDict)
 
 
-
-
 	for phaseVariantSet in c.search_variant_sets(dataset.id):
 		if phaseVariantSet.name == "phase3-release":
 			phaseAnnotation = phaseVariantSet
 
 	allCallSets = list(c.search_call_sets(phaseAnnotation.id))
-	#print(allCallSets[0])
 
 	callSetIds = []
 	for callSet in allCallSets:
@@ -162,17 +151,13 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				resultCount+=1
 
 				matchResults = {}
-				#print(phaseAnnotationSetList[i].calls[j])
 				
 				print(unicode(phaseAnnotationSetList[i].calls[j].call_set_name+" has "+str(termList[i])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
 				
-				
-				#for ids in callSetIds:
 				bioSamplesList = []
 				for k in range(0,len(allCallSets)):
 					if phaseAnnotationSetList[i].calls[j].call_set_id == allCallSets[k].id:
 						bioSamplesList.append(c.get_bio_sample(allCallSets[k].bio_sample_id))
-
 
 
 				for x in range(0,len(bioSamplesList)):
@@ -185,8 +170,6 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				if resultCount==100:
 					pageCount+=1
 					print("100 results")
-
-				#print(matchResults)
 				
 				matchList.append(matchResults)
 
