@@ -18,6 +18,13 @@ for result in c.search_variant_sets(dataset.id):
 functionalAnnotationSet = c.search_variant_annotation_sets(variant_set_id=functionalVariantSet.id).next()
 
 
+feature_set = c.search_feature_sets(dataset.id).next()
+
+def geneBySymbol(symbol):
+  return c.search_features(feature_set.id, gene_symbol=symbol, feature_types=['gene']).next()
+
+
+
 @app.route('/gene/<geneName>/term/<soTerm>')
 def pageOneResults(geneName, soTerm):
 	pageNumber = 0
@@ -30,21 +37,24 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	pageCount = 1
 
 	searchOntologyTerm = str(soTerm)
+
+
+	gene = geneBySymbol(geneName)
+
 	geneList = []
 	geneAndTermDict = collections.OrderedDict()
 
-
 	# Linked to Breast Cancer
-	geneAndTermDict['name'] = 'BRCA1'
-	geneAndTermDict['start'] = 43044295
-	geneAndTermDict['end'] = 43170245
-	geneAndTermDict['chrome'] = '17'
+	geneAndTermDict['name'] = geneName
+	geneAndTermDict['start'] = gene.start
+	geneAndTermDict['end'] = gene.end
+	geneAndTermDict['chrome'] = gene.reference_name.replace('chr','')
 	geneAndTermDict['term'] = searchOntologyTerm
 
 	geneList.append(geneAndTermDict)
 	geneAndTermDict = collections.OrderedDict()
 
-
+	"""
 	# Linked to Breast Cancer
 	geneAndTermDict['name'] = 'BRCA2'
 	geneAndTermDict['start'] = 32314862
@@ -87,25 +97,17 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	geneList.append(geneAndTermDict)
 	geneAndTermDict = collections.OrderedDict()
-
+	"""
 
 
 	#print(geneList[1]['name'])
 
-	geneIndex = -1
-	for i in range(0,len(geneList)):
-		if geneName==geneList[i]['name']:
-			geneIndex = i
+	geneIndex = 0
 
 
 	#print(geneList[0]['name'])
 
-
-
-	if geneIndex==-1:
-		return("gene not in data set")
-	else:
-		searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=geneList[geneIndex]['start'], end=geneList[geneIndex]['end'], reference_name=geneList[geneIndex]['chrome'], effects=[{'id': geneList[geneIndex]['term']}])
+	searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=gene.start, end=gene.end, reference_name=gene.reference_name.replace('chr',''), effects=[{'id': searchOntologyTerm}])
 
 	idList = []
 	termList = []
