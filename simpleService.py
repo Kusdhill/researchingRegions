@@ -8,13 +8,11 @@ import collections
 
 #####################################################################################################################################################
 
-
-ga4ghBaseURL = "http://1kgenomes.ga4gh.org"
+c = client.HttpClient("http://1kgenomes.ga4gh.org")
 
 @app.route('/gene/<geneName>/term/<soTerm>')
 def gene_route(geneName, soTerm):
 
-	c = client.HttpClient("http://1kgenomes.ga4gh.org")
 
 	dataset = c.search_datasets().next()
 
