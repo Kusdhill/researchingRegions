@@ -136,11 +136,11 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 
 
-	for phaseVariantSet in c.search_variant_sets(dataset.id):
-		if phaseVariantSet.name == "phase3-release":
-			phaseAnnotation = phaseVariantSet
+	for variantSet in c.search_variant_sets(dataset.id):
+		if variantSet.name == "phase3-release":
+			phaseVariantSet = variantSet
 
-	allCallSets = list(c.search_call_sets(phaseAnnotation.id))
+	allCallSets = list(c.search_call_sets(phaseVariantSet.id))
 	#print(allCallSets[0])
 
 	callSetIds = []
@@ -150,7 +150,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	phaseAnnotationSetList = []
 	for i in range(0,len(functionalList)):
-		searchResults = c.search_variants(phaseAnnotation.id, start=functionalList[i]['start'], end=functionalList[i]['end'], reference_name=functionalList[i]['chrome'], call_set_ids=callSetIds)
+		searchResults = c.search_variants(phaseVariantSet.id, start=functionalList[i]['start'], end=functionalList[i]['end'], reference_name=functionalList[i]['chrome'], call_set_ids=callSetIds)
 		for results in searchResults:
 			phaseAnnotationSetList.append(results)
 
