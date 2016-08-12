@@ -11,8 +11,8 @@ import collections
 
 ga4ghBaseURL = "http://1kgenomes.ga4gh.org"
 
-@app.route('/gene/<geneName>')
-def gene_route(geneName):
+@app.route('/gene/<geneName>/term/<soTerm>')
+def gene_route(geneName, soTerm):
 
 	c = client.HttpClient("http://1kgenomes.ga4gh.org")
 
@@ -28,7 +28,7 @@ def gene_route(geneName):
 	functionalAnnotationSet = c.search_variant_annotation_sets(variant_set_id=functionalAnnotation.id).next()
 
 
-	searchOntologyTerm = 'SO:0001630'
+	searchOntologyTerm = str(soTerm)
 	geneList = []
 	geneAndTermDict = collections.OrderedDict()
 
