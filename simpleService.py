@@ -38,13 +38,13 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	searchOntologyTerm = str(soTerm)
 
-
+	# Searching for features by gene symbol
 	gene = geneBySymbol(geneName)
 
 	geneList = []
 	geneAndTermDict = collections.OrderedDict()
 
-	# Linked to Breast Cancer
+
 	geneAndTermDict['name'] = geneName
 	geneAndTermDict['start'] = gene.start
 	geneAndTermDict['end'] = gene.end
@@ -107,30 +107,33 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	#print(geneList[0]['name'])
 
+	# Search annotations with feature, range, and effect
 	searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=gene.start, end=gene.end, reference_name=gene.reference_name.replace('chr',''), effects=[{'id': searchOntologyTerm}])
 
-	idList = []
+	variantIdList = []
 	termList = []
 	for annotation in searchedVarAnns:
 		for i in range(0,len(annotation.transcript_effects)):
 			for j in range(0,len(annotation.transcript_effects[i].effects)):
 				termList.append(annotation.transcript_effects[i].effects[j].term)
 				#print(annotation)
-				idList.append(annotation.variant_id)
+				variantIdList.append(annotation.variant_id)
 
-	#print(idList)
+	#print(variantIdList)
 	#print(termList)
 
 	functionalList = []
-	for i in range(0,len(idList)):
-		gotten = c.get_variant(idList[i])
+	variantList = []
+	for id_ in variantIdList:
+		gotten = c.get_variant(id_)
+		variantList.append(gotten)
+
+
 		functionalDict = collections.OrderedDict()
-		
 		functionalDict['start'] = gotten.start
 		functionalDict['end'] = gotten.end
 		functionalDict['term'] = termList[i]
 		functionalDict['chrome'] = gotten.reference_name
-		
 		functionalList.append(functionalDict)
 
 
@@ -149,8 +152,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 
 	phaseAnnotationSetList = []
-	for i in range(0,len(functionalList)):
-		searchResults = c.search_variants(phaseVariantSet.id, start=functionalList[i]['start'], end=functionalList[i]['end'], reference_name=functionalList[i]['chrome'], call_set_ids=callSetIds)
+	for variant in variantList:
+		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, reference_name=variant.reference_name, call_set_ids=callSetIds)
 		for results in searchResults:
 			phaseAnnotationSetList.append(results)
 
@@ -158,6 +161,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	matchList = []
 
+	# Find callsets with 'yes' call
 	for i in range(0,len(phaseAnnotationSetList)):
 		for j in range(0,len(phaseAnnotationSetList[i].calls)):
 			if phaseAnnotationSetList[i].calls[j].genotype[0]==1 or phaseAnnotationSetList[i].calls[j].genotype[1]==1:
