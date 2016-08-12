@@ -1,33 +1,10 @@
-"""
-	simple_service.py
-	Combine results from GA4GH and ExAC API to build
-	a simple web service.
-"""
-
-# Our web service will listen on an HTTP port for
-# requests and uses the Flask (http://flask.pocoo.org)
-# python module to handle communication.
-
 import flask
 app = flask.Flask(__name__)
 import json
 
-# We'll also include requests and the ga4gh client for
-# communicating with other web services.
-
 import ga4gh.client as client
 import ga4gh.protocol as p
 import collections
-import requests
-
-# This is an endpoint for our web service. When the script
-# runs we can point a web browser at these endpoints
-# and the underlying code will be executed.
-
-@app.route('/')
-def hello_world():
-	return 'Hello World! This is a test.'
-
 
 #####################################################################################################################################################
 
