@@ -9,23 +9,25 @@ import collections
 #####################################################################################################################################################
 
 c = client.HttpClient("http://1kgenomes.ga4gh.org")
+dataset = c.search_datasets().next()
+
+for result in c.search_variant_sets(dataset.id):
+	if result.name == "functional-annotation":
+		functionalVariantSet = result
+
+functionalAnnotationSet = c.search_variant_annotation_sets(variant_set_id=functionalVariantSet.id).next()
+
 
 @app.route('/gene/<geneName>/term/<soTerm>')
-def gene_route(geneName, soTerm):
+def pageOneResults(geneName, soTerm):
+	pageNumber = 0
+	return pagedResults(geneName, soTerm, pageNumber)
 
 
-	dataset = c.search_datasets().next()
-
+@app.route('/gene/<geneName>/term/<soTerm>/page/<pageNumber>')
+def pagedResults(geneName, soTerm,  pageNumber):
 	resultCount = 0
 	pageCount = 1
-
-	for functionalVariantSet in c.search_variant_sets(dataset.id):
-		if functionalVariantSet.name == "functional-annotation":
-			functionalAnnotation = functionalVariantSet
-
-	functionalAnnotationSet = c.search_variant_annotation_sets(variant_set_id=functionalAnnotation.id).next()
-
-
 	searchOntologyTerm = str(soTerm)
 	geneList = []
 	geneAndTermDict = collections.OrderedDict()
