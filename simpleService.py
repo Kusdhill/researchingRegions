@@ -151,33 +151,34 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		callSetIds.append(str(callSet.id))
 
 
-	phaseAnnotationSetList = []
+	phaseVariantList = []
 	for variant in variantList:
 		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, reference_name=variant.reference_name, call_set_ids=callSetIds)
-		for results in searchResults:
-			phaseAnnotationSetList.append(results)
+		for result in searchResults:
+			if result.start==variant.start and result.reference_bases==variant.reference_bases and result.reference_bases==variant.reference_bases:
+				phaseVariantList.append(result)
 
 
 
 	matchList = []
 
 	# Find callsets with 'yes' call
-	for i in range(0,len(phaseAnnotationSetList)):
-		for j in range(0,len(phaseAnnotationSetList[i].calls)):
-			if phaseAnnotationSetList[i].calls[j].genotype[0]==1 or phaseAnnotationSetList[i].calls[j].genotype[1]==1:
+	for i in range(0,len(phaseVariantList)):
+		for j in range(0,len(phaseVariantList[i].calls)):
+			if phaseVariantList[i].calls[j].genotype[0]==1 or phaseVariantList[i].calls[j].genotype[1]==1:
 				
 				resultCount+=1
 
 				matchResults = {}
-				#print(phaseAnnotationSetList[i].calls[j])
+				#print(phaseVariantList[i].calls[j])
 				
-				print(unicode(phaseAnnotationSetList[i].calls[j].call_set_name+" has "+str(termList[i])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
+				print(unicode(phaseVariantList[i].calls[j].call_set_name+" has "+str(termList[i])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
 				
 				
 				#for ids in callSetIds:
 				bioSamplesList = []
 				for k in range(0,len(allCallSets)):
-					if phaseAnnotationSetList[i].calls[j].call_set_id == allCallSets[k].id:
+					if phaseVariantList[i].calls[j].call_set_id == allCallSets[k].id:
 						bioSamplesList.append(c.get_bio_sample(allCallSets[k].bio_sample_id))
 
 
