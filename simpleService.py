@@ -4,7 +4,6 @@ import json
 
 import ga4gh.client as client
 import ga4gh.protocol as p
-import collections
 
 #####################################################################################################################################################
 
@@ -42,7 +41,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	gene = geneBySymbol(geneName)
 
 	geneList = []
-	geneAndTermDict = collections.OrderedDict()
+	geneAndTermDict = {}
 
 
 	geneAndTermDict['name'] = geneName
@@ -52,7 +51,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	geneAndTermDict['term'] = searchOntologyTerm
 
 	geneList.append(geneAndTermDict)
-	geneAndTermDict = collections.OrderedDict()
+	geneAndTermDict = {}
 
 	"""
 	# Linked to Breast Cancer
@@ -120,7 +119,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				variantIdList.append(annotation.variant_id)
 
 	#print(variantIdList)
-	#print(termList)
+	print("termList",termList)
+	print(len(termList))
 
 	functionalList = []
 	variantList = []
@@ -129,8 +129,9 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		variantList.append(gotten)
 
 
-		functionalDict = collections.OrderedDict()
+		functionalDict = {}
 		functionalDict['start'] = gotten.start
+		#print(functionalDict['start'])
 		functionalDict['end'] = gotten.end
 		functionalDict['term'] = termList[i]
 		functionalDict['chrome'] = gotten.reference_name
@@ -159,20 +160,25 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				phaseVariantList.append(result)
 
 
-
 	matchList = []
 
+	#print(functionalList)
+	#print(len(functionalList))
+
 	# Find callsets with 'yes' call
-	for i in range(0,len(phaseVariantList)):
-		for j in range(0,len(phaseVariantList[i].calls)):
-			if phaseVariantList[i].calls[j].genotype[0]==1 or phaseVariantList[i].calls[j].genotype[1]==1:
+	#print(phaseVariantList)
+	for index, variant in enumerate(phaseVariantList):
+		for j in range(0,len(variant.calls)):
+			if variant.calls[j].genotype[0]==1 or variant.calls[j].genotype[1]==1:
 				
 				resultCount+=1
 
 				matchResults = {}
 				#print(phaseVariantList[i].calls[j])
-				
-				print(unicode(phaseVariantList[i].calls[j].call_set_name+" has "+str(termList[i])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
+
+
+				#### fix unnecesary termList issue
+				print(unicode(variant.calls[j].call_set_name+" has "+str(termList[0])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[index]['start'])+" to "+str(functionalList[index]['end'])))
 				
 				
 				#for ids in callSetIds:
@@ -195,7 +201,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 					print("100 results")
 
 				#print(matchResults)
-				
+				#print(index)
 				matchList.append(matchResults)
 
 
