@@ -124,7 +124,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	for callSet in allCallSets:
 		callSetIds.append(str(callSet.id))
 
-	### Using all of the variants within varianList, search ___ based on the start position, end position, and the call set ID's
+	### Using all of the variants within variantList, search for variants based on the start position, end position, and the call set ID's
 	### Then, for all of the found results, if the result start, end, and chromosome reference name matches the start, end, and chromosome
 	### reference name of the variants in variantList, append it to phaseVariantList 
 	phaseVariantList = []
