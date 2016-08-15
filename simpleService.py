@@ -5,8 +5,6 @@ import json
 import ga4gh.client as client
 import ga4gh.protocol as p
 
-#####################################################################################################################################################
-
 c = client.HttpClient("http://1kgenomes.ga4gh.org")
 dataset = c.search_datasets().next()
 
@@ -55,49 +53,17 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	"""
 	# Linked to Breast Cancer
-	geneAndTermDict['name'] = 'BRCA2'
-	geneAndTermDict['start'] = 32314862
-	geneAndTermDict['end'] = 32363334#32400266
-	geneAndTermDict['chrome'] = '13'
-	geneAndTermDict['term'] = searchOntologyTerm
-
-	geneList.append(geneAndTermDict)
-	geneAndTermDict = collections.OrderedDict()
-
+		BRCA2
 
 	# Linked to Alzheimer's Disease
-	geneAndTermDict['name'] = 'APP'
-	geneAndTermDict['start'] = 25880550
-	geneAndTermDict['end'] = 26170820
-	geneAndTermDict['chrome'] = '21'
-	geneAndTermDict['term'] = searchOntologyTerm
-
-	geneList.append(geneAndTermDict)
-	geneAndTermDict = collections.OrderedDict()
-
+		APP
 
 	# Linked to Prostate Cancer
-	geneAndTermDict['name'] = 'HOXB13'
-	geneAndTermDict['start'] = 48724763
-	geneAndTermDict['end'] = 48729178
-	geneAndTermDict['chrome'] = '17'
-	geneAndTermDict['term'] = searchOntologyTerm
-
-	geneList.append(geneAndTermDict)
-	geneAndTermDict = collections.OrderedDict()
-
+		HOXB13
 
 	# Linked to Parkinson's Disease
-	geneAndTermDict['name'] = 'SNCA'
-	geneAndTermDict['start'] = 89724099
-	geneAndTermDict['end'] = 89838315
-	geneAndTermDict['chrome'] = '4'
-	geneAndTermDict['term'] = searchOntologyTerm
-
-	geneList.append(geneAndTermDict)
-	geneAndTermDict = collections.OrderedDict()
+		SNCA
 	"""
-
 
 	#print(geneList[1]['name'])
 
@@ -119,8 +85,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				variantIdList.append(annotation.variant_id)
 
 	#print(variantIdList)
-	print("termList",termList)
-	print(len(termList))
+	#print("termList",termList)
+	#print(len(termList))
 
 	functionalList = []
 	variantList = []
@@ -167,18 +133,22 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	# Find callsets with 'yes' call
 	#print(phaseVariantList)
-	for index, variant in enumerate(phaseVariantList):
-		for j in range(0,len(variant.calls)):
-			if variant.calls[j].genotype[0]==1 or variant.calls[j].genotype[1]==1:
+
+# Fix loop issue here
+################################################################################################################################
+	for i in range(0,len(phaseVariantList)):
+		for j in range(0,len(phaseVariantList[i].calls)):
+################################################################################################################################
+			if phaseVariantList[i].calls[j].genotype[0]==1 or phaseVariantList[i].calls[j].genotype[1]==1:
+				#print(phaseVariantList[i].calls[j].genotype[0],phaseVariantList[i].calls[j].genotype[1])
 				
 				resultCount+=1
 
 				matchResults = {}
 				#print(phaseVariantList[i].calls[j])
 
-
 				#### fix unnecesary termList issue
-				print(unicode(variant.calls[j].call_set_name+" has "+str(termList[0])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[index]['start'])+" to "+str(functionalList[index]['end'])))
+				print(unicode(phaseVariantList[i].calls[j].call_set_name+" has "+str(termList[0])+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
 				
 				
 				#for ids in callSetIds:
