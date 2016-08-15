@@ -161,8 +161,6 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 				print(unicode(phaseVariantList[i].calls[j].call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
 				
-				
-				#for ids in callSetIds:
 				bioSamplesList = []
 				for k in range(0,len(allCallSets)):
 					if phaseVariantList[i].calls[j].call_set_id == allCallSets[k].id:
