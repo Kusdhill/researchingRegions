@@ -45,14 +45,15 @@ def pageOneResults(geneName, soTerm):
 ### pagedResults returns a paginated response if the result is large and the client would like a bite sized peice of the json response
 @app.route('/gene/<geneName>/term/<soTerm>/page/<pageNumber>')
 def pagedResults(geneName, soTerm,  pageNumber):
-	resultCount = 0
-	pageCount = 1
+	resultCount = -1
+	pageCount = 0
 
 	searchOntologyTerm = str(soTerm)
 
 	### Searches for features by gene symbol
+	print("Looking for a gene")
 	gene = geneBySymbol(geneName)
-
+	print("Found {}".format(gene.name))
 	geneList = []
 	geneAndTermDict = {}
 
@@ -74,11 +75,13 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	#print(geneList[0]['name'])
 
 	### Search annotations with feature, range, and effect
+	print("searching for variant annotations")
 	searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=gene.start, end=gene.end, reference_name=gene.reference_name.replace('chr',''), effects=[{'id': searchOntologyTerm}])
 
 	variantIdList = []
 
 	### Unpack annotations from the searched variant annotations, and store their ID's in variantIdList 
+	print("unpacking annotations and storing ID's")
 	for annotation in searchedVarAnns:
 		variantIdList.append(annotation.variant_id)
 		for teff in annotation.transcript_effects:
@@ -96,6 +99,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	### Using the ID's in variantIdList, use get_variant function to retrieve start and endpoints and chromosome reference name
 	### For every ID in variantIdList, populate functionalDict and then append the dictionary to functionalList
+	print("storing start and endpoints for each variant ID")
 	for id_ in variantIdList:
 		gotten = c.get_variant(id_)
 		#print(gotten)
@@ -113,11 +117,13 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 
 	### Now that we have all of the functional annotation data we need, we need to dig into the phase3-release data
+	print("grabbing phase3-releases")
 	for variantSet in c.search_variant_sets(dataset.id):
 		if variantSet.name == "phase3-release":
 			phaseVariantSet = variantSet
 
 	### Grab all 2504 individuals in the ga4gh data set, we will use this to compare to searchResults below
+	print("grabbing call sets")
 	allCallSets = list(c.search_call_sets(phaseVariantSet.id))
 	#print(len(allCallSets))
 	#print(allCallSets[0])
@@ -128,7 +134,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	### Using all of the variants within variantList, search for variants based on the start position, end position, and the call set ID's
 	### Then, for all of the found results, if the result start, end, and chromosome reference name matches the start, end, and chromosome
-	### reference name of the variants in variantList, append it to phaseVariantList 
+	### reference name of the variants in variantList, append it to phaseVariantList
+	print("creating phaseVariantList")
 	phaseVariantList = []
 	for variant in variantList:
 		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, reference_name=variant.reference_name, call_set_ids=callSetIds)
@@ -149,13 +156,11 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	### If a given callset possesses the search term the user is looking for (if the genotype == 1), then the start point and end point
 	### are added to the matchResults dictionary. matchResults is the JSON that will be returned to the client. 
 	### A human-friendly string is printed so that the client can easily see where matches were found.
-# Fix loop issue here
-################################################################################################################################
+	print("finding matches")
 	for variant in phaseVariantList:
 		for call in variant.calls:
-################################################################################################################################
 			if call.genotype[0]==1 or call.genotype[1]==1:
-				print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
+				#print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
 				
 				resultCount+=1
 
@@ -165,18 +170,18 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				print(unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(variant.start)+" to "+str(variant.end)))
 				
 				bioSamplesList = []
-				for k in range(0,len(allCallSets)):
-					if call.call_set_id == allCallSets[k].id:
-						bioSamplesList.append(c.get_bio_sample(allCallSets[k].bio_sample_id))
+				for callSet in allCallSets:
+					if call.call_set_id == callSet.id:
+						bioSamplesList.append(c.get_bio_sample(callSet.bio_sample_id))
 
 
 
-				for x in range(0,len(bioSamplesList)):
-					matchResults['biosample'] = p.toJsonDict(bioSamplesList[x])
-				matchResults['term']   = term
-				matchResults['start']  = str(variant.start)
-				matchResults['end']    = str(variant.end)
-				matchResults['result_number'] = resultCount
+				for sample in bioSamplesList:
+					matchResults['biosample'] 	= p.toJsonDict(sample)
+				matchResults['term']   			= term
+				matchResults['start']  			= str(variant.start)
+				matchResults['end']    			= str(variant.end)
+				matchResults['result_number'] 	= resultCount
 
 				if resultCount==100:
 					pageCount+=1
