@@ -80,11 +80,13 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	### Unpack annotations from the searched variant annotations, and store their ID's in variantIdList 
 	for annotation in searchedVarAnns:
-		term = annotation.transcript_effects[0].effects[0].term
-		for i in range(0,len(annotation.transcript_effects)):
-			for j in range(0,len(annotation.transcript_effects[i].effects)):
+		variantIdList.append(annotation.variant_id)
+		for teff in annotation.transcript_effects:
+			for effect in teff.effects:
+				if effect.id==searchOntologyTerm:
+					term = effect.term
+
 				#print(annotation)
-				variantIdList.append(annotation.variant_id)
 
 
 	#print(variantIdList)
@@ -133,6 +135,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		for result in searchResults:
 			if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
 				phaseVariantList.append(result)
+		#print(searchResults)
 
 
 	matchList = []
@@ -148,22 +151,22 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	### A human-friendly string is printed so that the client can easily see where matches were found.
 # Fix loop issue here
 ################################################################################################################################
-	for i in range(0,len(phaseVariantList)):
-		for j in range(0,len(phaseVariantList[i].calls)):
+	for variant in phaseVariantList:
+		for call in variant.calls:
 ################################################################################################################################
-			if phaseVariantList[i].calls[j].genotype[0]==1 or phaseVariantList[i].calls[j].genotype[1]==1:
-				#print(phaseVariantList[i].calls[j].genotype[0],phaseVariantList[i].calls[j].genotype[1])
+			if call.genotype[0]==1 or call.genotype[1]==1:
+				print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
 				
 				resultCount+=1
 
 				matchResults = {}
 				#print(phaseVariantList[i].calls[j])
 
-				print(unicode(phaseVariantList[i].calls[j].call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(functionalList[i]['start'])+" to "+str(functionalList[i]['end'])))
+				print(unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(variant.start)+" to "+str(variant.end)))
 				
 				bioSamplesList = []
 				for k in range(0,len(allCallSets)):
-					if phaseVariantList[i].calls[j].call_set_id == allCallSets[k].id:
+					if call.call_set_id == allCallSets[k].id:
 						bioSamplesList.append(c.get_bio_sample(allCallSets[k].bio_sample_id))
 
 
@@ -171,8 +174,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				for x in range(0,len(bioSamplesList)):
 					matchResults['biosample'] = p.toJsonDict(bioSamplesList[x])
 				matchResults['term']   = term
-				matchResults['start']  = str(functionalList[i]['start'])
-				matchResults['end']    = str(functionalList[i]['end'])
+				matchResults['start']  = str(variant.start)
+				matchResults['end']    = str(variant.end)
 				matchResults['result_number'] = resultCount
 
 				if resultCount==100:
