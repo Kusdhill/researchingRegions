@@ -45,8 +45,9 @@ def pageOneResults(geneName, soTerm):
 ### pagedResults returns a paginated response if the result is large and the client would like a bite sized peice of the json response
 @app.route('/gene/<geneName>/term/<soTerm>/page/<pageNumber>')
 def pagedResults(geneName, soTerm,  pageNumber):
-	resultCount = -1
+	resultCount = 0
 	pageCount = 0
+	pagedResultsList = []
 
 	searchOntologyTerm = str(soTerm)
 
@@ -162,35 +163,46 @@ def pagedResults(geneName, soTerm,  pageNumber):
 			if call.genotype[0]==1 or call.genotype[1]==1:
 				#print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
 				
+
+				if resultCount % 20==0:
+					print(resultCount,pageCount)
+					pageCount+=1
+
 				resultCount+=1
 
-				matchResults = {}
+
+
 				#print(phaseVariantList[i].calls[j])
 
-				print(unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(variant.start)+" to "+str(variant.end)))
+				readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(variant.start)+" to "+str(variant.end)) 
+
+				#print(readableString)
 				
+				pagedResultsList.append(readableString)
+				print(pagedResultsList[resultCount-1])
+
+
+
 				bioSamplesList = []
 				for callSet in allCallSets:
 					if call.call_set_id == callSet.id:
 						bioSamplesList.append(c.get_bio_sample(callSet.bio_sample_id))
 
 
-
+				matchResults = {}
 				for sample in bioSamplesList:
 					matchResults['biosample'] 	= p.toJsonDict(sample)
 				matchResults['term']   			= term
 				matchResults['start']  			= str(variant.start)
 				matchResults['end']    			= str(variant.end)
 				matchResults['result_number'] 	= resultCount
-
-				if resultCount==100:
-					pageCount+=1
-					print("100 results")
+					
 
 				#print(matchResults)
 				#print(index)
 				matchList.append(matchResults)
 
+	print(pagedResultsList[0])
 
 	return flask.jsonify({'matches' : matchList, 'gene' : geneList[geneIndex]['name']})
 
