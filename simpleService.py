@@ -76,7 +76,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	### Search annotations with feature, range, and effect
 	print("searching for variant annotations")
-	searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=gene.start, end=gene.end, reference_name=gene.reference_name.replace('chr',''), effects=[{'id': searchOntologyTerm}])
+	searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=gene.start, end=gene.end, 
+		reference_name=gene.reference_name.replace('chr',''), effects=[{'id': searchOntologyTerm}])
 
 	variantIdList = []
 
@@ -138,12 +139,12 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	print("creating phaseVariantList")
 	phaseVariantList = []
 	for variant in variantList:
-		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, reference_name=variant.reference_name, call_set_ids=callSetIds)
+		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, 
+			reference_name=variant.reference_name, call_set_ids=callSetIds)
 		for result in searchResults:
 			if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
 				phaseVariantList.append(result)
 		#print(searchResults)
-
 
 	matchList = []
 
@@ -162,18 +163,16 @@ def pagedResults(geneName, soTerm,  pageNumber):
 			if call.genotype[0]==1 or call.genotype[1]==1:
 				#print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
 				
-
 				if resultCount % 20==0:
 					print(resultCount,pageCount)
 					pageCount+=1
 
 				resultCount+=1
 
-
-
 				#print(phaseVariantList[i].calls[j])
 
-				readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "+str(variant.start)+" to "+str(variant.end)) 
+				readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "
+					+str(variant.start)+" to "+str(variant.end)) 
 
 				print(readableString)
 				
@@ -198,7 +197,13 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				#print(index)
 				matchList.append(matchResults)
 
+				if int(pageNumber)*20==resultCount+1:
+					print("wow!")
+					return flask.jsonify({'matches' : matchList[int(pageNumber)*20:(int(pageNumber)*20)+20], 'gene' : geneList[geneIndex]['name']})
+
+
 	print(matchList[int(pageNumber)*20:(int(pageNumber)*20)+20])
+	print(int(pageNumber)*20,(int(pageNumber)*20)+20)
 
 	return flask.jsonify({'matches' : matchList[int(pageNumber)*20:(int(pageNumber)*20)+20], 'gene' : geneList[geneIndex]['name']})
 
