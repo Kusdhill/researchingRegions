@@ -45,9 +45,9 @@ def pageOneResults(geneName, soTerm):
 ### pagedResults returns a paginated response if the result is large and the client would like a bite sized peice of the json response
 @app.route('/gene/<geneName>/term/<soTerm>/page/<pageNumber>')
 def pagedResults(geneName, soTerm,  pageNumber):
-	resultCount = -1
+	resultCount = 0
+	pageSize = 20
 	pageCount = 0
-	pagedResultsList = []
 
 	searchOntologyTerm = str(soTerm)
 
@@ -142,8 +142,28 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, 
 			reference_name=variant.reference_name, call_set_ids=callSetIds)
 		for result in searchResults:
-			if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
-				phaseVariantList.append(result)
+			for call in result.calls:
+				if call.genotype[0]==1 or call.genotype[1]==1:
+					print(call)
+					readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "
+					+str(variant.start)+" to "+str(variant.end))
+					print(readableString)
+					resultCount += 1
+					print(str(len(phaseVariantList))+"=="+str(pageSize))
+					print(str(resultCount)+">="+str(pageSize)+"*"+str(pageNumber))
+
+					print("going into conditionals")
+					if len(phaseVariantList) == pageSize:
+						print("breaking")
+						break
+					if resultCount>=(pageSize*pageNumber):
+						print("appending")
+						phaseVariantList.append(result)
+						print(len(phaseVariantList))
+
+
+					#if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
+						#phaseVariantList.append(result)
 		#print(searchResults)
 
 	matchList = []
@@ -153,58 +173,46 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	
 	#print(phaseVariantList)
-
+	"""
 	### If a given callset possesses the search term the user is looking for (if the genotype == 1), then the start point and end point
 	### are added to the matchResults dictionary. matchResults is the JSON that will be returned to the client. 
 	### A human-friendly string is printed so that the client can easily see where matches were found.
 	print("finding matches")
 	for variant in phaseVariantList:
-		for call in variant.calls:
-			if call.genotype[0]==1 or call.genotype[1]==1:
-				#print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
+
+		#print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
 				
-				if resultCount % 20==0:
-					print(resultCount,pageCount)
-					pageCount+=1
+		if resultCount-((20*pageCount)-1)>=0:
+			print("increasing pageCount")
+			pageCount+=1
 
-				resultCount+=1
+		resultCount+=1
 
-				#print(phaseVariantList[i].calls[j])
-
-				readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneList[geneIndex]['name']+" at position "
-					+str(variant.start)+" to "+str(variant.end)) 
-
-				print(readableString)
-				
-				pagedResultsList.append(readableString)
-				#print(pagedResultsList[resultCount-1])
-
-				bioSamplesList = []
-				for callSet in allCallSets:
-					if call.call_set_id == callSet.id:
-						bioSamplesList.append(c.get_bio_sample(callSet.bio_sample_id))
-
-				matchResults = {}
-				for sample in bioSamplesList:
-					matchResults['biosample'] 	= p.toJsonDict(sample)
-				matchResults['term']   			= term
-				matchResults['start']  			= str(variant.start)
-				matchResults['end']    			= str(variant.end)
-				matchResults['result_number'] 	= resultCount
-				matchResults['page']			= pageCount
-
-				#print(matchResults)
-				#print(index)
-				matchList.append(matchResults)
-
-				if int(pageNumber)*20==resultCount+1:
-					print("wow!")
-					return flask.jsonify({'matches' : matchList[int(pageNumber)*20:(int(pageNumber)*20)+20], 'gene' : geneList[geneIndex]['name']})
+		#print(phaseVariantList[i].calls[j])
 
 
-	print(matchList[int(pageNumber)*20:(int(pageNumber)*20)+20])
-	print(int(pageNumber)*20,(int(pageNumber)*20)+20)
+		matchResults = {}
+		for sample in bioSamplesList:
+			matchResults['biosample'] 	= p.toJsonDict(sample)
+		matchResults['term']   			= term
+		matchResults['start']  			= str(variant.start)
+		matchResults['end']    			= str(variant.end)
+		matchResults['result_number'] 	= resultCount
+		matchResults['page']			= pageCount
 
+		#print(matchResults)
+		#print(index)
+		matchList.append(matchResults)
+
+		if (int(pageNumber)*20)+19==resultCount:
+			#print(matchList)
+			#print("wow!")
+			return flask.jsonify({'matches' : matchList[int(pageNumber)*20:(int(pageNumber)*20)+20], 'gene' : geneList[geneIndex]['name']})
+
+	"""
+	#print(matchList[int(pageNumber)*20:(int(pageNumber)*20)+20])
+	#print(int(pageNumber)*20,(int(pageNumber)*20)+20)
+	print("returning")
 	return flask.jsonify({'matches' : matchList[int(pageNumber)*20:(int(pageNumber)*20)+20], 'gene' : geneList[geneIndex]['name']})
 
 if __name__ == '__main__':
