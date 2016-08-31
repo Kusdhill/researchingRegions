@@ -107,21 +107,35 @@ def pagedResults(geneName, soTerm,  pageNumber):
 			phaseVariantSet = variantSet
 
 	### Grab all 2504 individuals in the ga4gh data set, we will use this to compare to searchResults below
-	print("grabbing call sets")
+	print("grabbing biosamples")
+	bioSampleDict = {}
+	bioSamplesList = list(c.search_bio_samples(dataset.id))
+	bsIdToBs = {}
+	for biosample in c.search_bio_samples(dataset.id):
+		bsIdToBs[biosample.id] = biosample
 	allCallSets = list(c.search_call_sets(phaseVariantSet.id))
 	#print(len(allCallSets))
 	#print(allCallSets[0])
+	print("grabbing callsets")
 	callSetIds = []
 	### Store all 2504 call set ID's in the callSetIds list
 	for callSet in allCallSets:
 		callSetIds.append(str(callSet.id))
+		bioSampleDict[callSet.id] = bsIdToBs[callSet.bio_sample_id]
+
+	
+
 
 	### Using all of the variants within variantList, search for variants based on the start position, end position, and the call set ID's
 	### Then, for all of the found results, if the result start, end, and chromosome reference name matches the start, end, and chromosome
 	### reference name of the variants in variantList, append it to phaseVariantList
 	print("creating phaseVariantList")
+	matchList = []
 	phaseVariantList = []
+	nextPageNum = int(pageNumber)
 	for variant in variantList:
+		# print(variant)
+		print("merging to phase3 variants")
 		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, 
 			reference_name=variant.reference_name, call_set_ids=callSetIds)
 		for result in searchResults:
@@ -135,25 +149,36 @@ def pagedResults(geneName, soTerm,  pageNumber):
 					 +str(variant.start)+" to "+str(variant.end))
 					print(readableString)
 					
+					matchResult = {}
+					v = p.toJsonDict(result)
+					del v['calls']
+					matchResult['variant'] = v
+					matchResult['biosample'] = p.toJsonDict(bioSampleDict[call.call_set_id])
+
 					resultCount += 1
 					
-					print(str(len(phaseVariantList))+"=="+str(pageSize))
-					print(str(resultCount)+">="+str(pageSize)+"*"+str(pageNumber))
+					#print(str(len(phaseVariantList))+"=="+str(pageSize))
+					#print(str(resultCount)+">="+str(pageSize)+"*"+str(pageNumber))
 
-					print("going into conditionals")
-					if len(phaseVariantList) == pageSize:
+					#print("going into conditionals")
+					if len(matchList) == pageSize:
 						print("breaking inner loop")
+						nextPageNum+=1
+						print(nextPageNum,pageNumber)
+						if nextPageNum==int(pageNumber):
+							print("none")
+							nextPageNum=None
 						break
 					if resultCount>=(pageSize*int(pageNumber)):
 						print("appending")
-						phaseVariantList.append(result)
+						matchList.append(matchResult)
 
 
 					#if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
 						#phaseVariantList.append(result)
 		#print(searchResults)
 
-	matchList = []
+	
 
 	#print(functionalList)
 	#print(len(functionalList))
@@ -165,24 +190,29 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	### are added to the matchResults dictionary. matchResults is the JSON that will be returned to the client. 
 	### A human-friendly string is printed so that the client can easily see where matches were found.
 	print("populating matchResults object")
+	
+	"""
 	resultCount = int(pageNumber)*pageSize
-
+	
 	for variant in phaseVariantList:
-
+		
 		bioSamplesList = []
 		for callSet in allCallSets:
 			if call.call_set_id == callSet.id:
 				bioSamplesList.append(c.get_bio_sample(callSet.bio_sample_id))
+		
 
-		matchResults = {}
+
 		for sample in bioSamplesList:
 			matchResults['biosample'] 	= p.toJsonDict(sample)
+			print(sample)
 		matchResults['result_number'] 	= resultCount
 
 		#print(matchResults)
 		#print(index)
 		matchList.append(matchResults)
 		resultCount+=1
+	"""
 
 	# next page token,
 	#	variant
@@ -191,8 +221,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	# term (SO+readable term)
 	
 	print("returning")
-	return flask.jsonify({'next_page_token' : int(pageNumber)+1	, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm})
+	return flask.jsonify({'next_page_token' : nextPageNum, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm})
 
 if __name__ == '__main__':
-	app.debug = True  # helps us figure out if something went wrong
+	app.debug = True  # helps figure out if something went wrong
 	app.run()         # starts the server and keeps it running
