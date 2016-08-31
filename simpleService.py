@@ -78,7 +78,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	#print(variantIdList)
 
-	functionalList = []
+	#functionalList = []
 	variantList = []
 
 	### Using the ID's in variantIdList, use get_variant function to retrieve start and endpoints and chromosome reference name
@@ -90,7 +90,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		variantList.append(gotten)
 		#print("variantList",variantList)
 
-	
+		"""
 		functionalDict = {}
 		functionalDict['start'] = gotten.start
 		#print(functionalDict['start'])
@@ -98,7 +98,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		functionalDict['term'] = term
 		functionalDict['chrome'] = gotten.reference_name
 		functionalList.append(functionalDict)
-
+		"""
 
 	### Now that we have all of the functional annotation data we need, we need to dig into the phase3-release data
 	print("grabbing phase3-releases")
