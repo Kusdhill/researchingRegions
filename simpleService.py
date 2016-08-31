@@ -5,7 +5,8 @@
 	### HOXB13 - Linked to Prostate Cancer
 	### SNCA   - Linked to Parkinson's Disease
 
-### Usage example: http://localhost:5000/gene/BRCA1/term/SO:0001575
+### Usage example:	http://localhost:5000/gene/BRCA1/term/SO:0001575
+### or 				http://localhost:5000/gene/BRCA1/term/SO:0001575/page/5
 
 import flask
 app = flask.Flask(__name__)
@@ -133,23 +134,19 @@ def pagedResults(geneName, soTerm,  pageNumber):
 					readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneName+" at position "
 					 +str(variant.start)+" to "+str(variant.end))
 					print(readableString)
+					
 					resultCount += 1
-					#print(str(len(phaseVariantList))+"=="+str(pageSize))
-					#print(str(resultCount)+">="+str(pageSize)+"*"+str(pageNumber))
+					
+					print(str(len(phaseVariantList))+"=="+str(pageSize))
+					print(str(resultCount)+">="+str(pageSize)+"*"+str(pageNumber))
 
 					print("going into conditionals")
-					print(len(phaseVariantList))
-					print(resultCount >= (pageSize*pageNumber))
-					print(resultCount)
-					print((pageSize*int(pageNumber)))
 					if len(phaseVariantList) == pageSize:
 						print("breaking inner loop")
-						print(len(phaseVariantList))
 						break
 					if resultCount>=(pageSize*int(pageNumber)):
 						print("appending")
 						phaseVariantList.append(result)
-						print(len(phaseVariantList))
 
 
 					#if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
@@ -168,18 +165,9 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	### are added to the matchResults dictionary. matchResults is the JSON that will be returned to the client. 
 	### A human-friendly string is printed so that the client can easily see where matches were found.
 	print("populating matchResults object")
+	resultCount = int(pageNumber)*pageSize
+
 	for variant in phaseVariantList:
-
-		#print(call.genotype[0], call.genotype[1], unicode(call.call_set_name))
-		"""		
-		if resultCount-((20*pageCount)-1)>=0:
-			print("increasing pageCount")
-			pageCount+=1
-
-		resultCount+=1
-		"""
-		#print(phaseVariantList[i].calls[j])
-
 
 		bioSamplesList = []
 		for callSet in allCallSets:
@@ -189,31 +177,21 @@ def pagedResults(geneName, soTerm,  pageNumber):
 		matchResults = {}
 		for sample in bioSamplesList:
 			matchResults['biosample'] 	= p.toJsonDict(sample)
-		matchResults['term']   			= term
-		matchResults['start']  			= str(variant.start)
-		matchResults['end']    			= str(variant.end)
 		matchResults['result_number'] 	= resultCount
-		matchResults['page']			= pageCount
 
 		#print(matchResults)
 		#print(index)
 		matchList.append(matchResults)
-
-		"""
-		if (int(pageNumber)*20)+19==resultCount:
-			#print(matchList)
-			#print("wow!")
-			return flask.jsonify({'matches' : matchList[int(pageNumber)*20:(int(pageNumber)*20)+20], 'gene' : geneList[geneIndex]['name']})
-		"""
+		resultCount+=1
 
 	# next page token,
 	#	variant
 	#	biosample
 	# gene
 	# term (SO+readable term)
-
+	
 	print("returning")
-	return flask.jsonify({ 'next_page_token' : 2,'matches' : matchList, 'gene' : geneName})
+	return flask.jsonify({'next_page_token' : int(pageNumber)+1	, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm})
 
 if __name__ == '__main__':
 	app.debug = True  # helps us figure out if something went wrong
