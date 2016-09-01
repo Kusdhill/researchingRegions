@@ -5,8 +5,8 @@
 	### HOXB13 - Linked to Prostate Cancer
 	### SNCA   - Linked to Parkinson's Disease
 
-### Usage example:	http://localhost:5000/gene/BRCA1/term/SO:0001575
-### or 				http://localhost:5000/gene/BRCA1/term/SO:0001575/page/5
+### Usage example:	http://localhost:5000/gene/BRCA1/term/SO:0001630
+### or 				http://localhost:5000/gene/BRCA1/term/SO:0001630/page/5
 
 import flask
 app = flask.Flask(__name__)
@@ -28,22 +28,23 @@ for result in c.search_variant_sets(dataset.id):
 
 ### functional-annotation id is used to get functional annotation set
 functionalAnnotationSet = c.search_variant_annotation_sets(variant_set_id=functionalVariantSet.id).next()
-
 feature_set = c.search_feature_sets(dataset.id).next()
+
 
 ### geneBySymbol function allows client to input a gene symbol so they don't need to remember start and endpoints or chromosome reference name
 def geneBySymbol(symbol):
   return c.search_features(feature_set.id, gene_symbol=symbol, feature_types=['gene']).next()
 
 
-### pageOneResults returns an un-paginated response if the client would like to see the entire json response
+### pageOneResults returns the zeroeth page if the client does not provide a page
 @app.route('/gene/<geneName>/term/<soTerm>')
 def pageOneResults(geneName, soTerm):
 	pageNumber = 0
 	return pagedResults(geneName, soTerm, pageNumber)
 
 
-### pagedResults returns a paginated response if the result is large and the client would like a bite sized peice of the json response
+
+### pagedResults returns a paginated response, the client provides the page they would like to see
 @app.route('/gene/<geneName>/term/<soTerm>/page/<pageNumber>')
 def pagedResults(geneName, soTerm,  pageNumber):
 	resultCount = 0
@@ -57,6 +58,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	gene = geneBySymbol(geneName)
 	print("Found {}".format(gene.name))
 
+	### FUNCTIONAL ANNOTATIONS ###
 	### Search annotations with feature, range, and effect
 	print("searching for variant annotations")
 	searchedVarAnns = c.search_variant_annotations(variant_annotation_set_id=functionalAnnotationSet.id, start=gene.start, end=gene.end, 
@@ -64,7 +66,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	variantIdList = []
 
-	### Unpack annotations from the searched variant annotations, and store their ID's in variantIdList 
+	### Unpack annotations from the searched variant annotations, and store their ID's in variantIdList
+	### Store the term name in the term variable
 	print("unpacking annotations and storing ID's")
 	for annotation in searchedVarAnns:
 		variantIdList.append(annotation.variant_id)
@@ -73,78 +76,61 @@ def pagedResults(geneName, soTerm,  pageNumber):
 				if effect.id==searchOntologyTerm:
 					term = effect.term
 
-				#print(annotation)
-
-
-	#print(variantIdList)
-
-	#functionalList = []
 	variantList = []
 
-	### Using the ID's in variantIdList, use get_variant function to retrieve start and endpoints and chromosome reference name
-	### For every ID in variantIdList, populate functionalDict and then append the dictionary to functionalList
-	print("storing start and endpoints for each variant ID")
+
+
+	### Using the ID's in variantIdList, use get_variant function to store the variant information in variantList
+	### This will be used later below in a for loop
+	print("populating variantList")
 	for id_ in variantIdList:
 		gotten = c.get_variant(id_)
-		#print(gotten)
 		variantList.append(gotten)
-		#print("variantList",variantList)
 
-		"""
-		functionalDict = {}
-		functionalDict['start'] = gotten.start
-		#print(functionalDict['start'])
-		functionalDict['end'] = gotten.end
-		functionalDict['term'] = term
-		functionalDict['chrome'] = gotten.reference_name
-		functionalList.append(functionalDict)
-		"""
 
+	### PHASE3-RELEASE ###
 	### Now that we have all of the functional annotation data we need, we need to dig into the phase3-release data
 	print("grabbing phase3-releases")
 	for variantSet in c.search_variant_sets(dataset.id):
 		if variantSet.name == "phase3-release":
 			phaseVariantSet = variantSet
 
-	### Grab all 2504 individuals in the ga4gh data set, we will use this to compare to searchResults below
+	### Grab bio sample information of all individuals. This information includes population information and family data
 	print("grabbing biosamples")
 	bioSampleDict = {}
 	bioSamplesList = list(c.search_bio_samples(dataset.id))
-	bsIdToBs = {}
+	bsIdToBsam = {}
 	for biosample in c.search_bio_samples(dataset.id):
-		bsIdToBs[biosample.id] = biosample
+		bsIdToBsam[biosample.id] = biosample
 	allCallSets = list(c.search_call_sets(phaseVariantSet.id))
-	#print(len(allCallSets))
-	#print(allCallSets[0])
+
+	### Store all 2504 call set ID's in the callSetIds list and populate the bioSampleDict object
 	print("grabbing callsets")
 	callSetIds = []
-	### Store all 2504 call set ID's in the callSetIds list
 	for callSet in allCallSets:
 		callSetIds.append(str(callSet.id))
-		bioSampleDict[callSet.id] = bsIdToBs[callSet.bio_sample_id]
-
-	
+		bioSampleDict[callSet.id] = bsIdToBsam[callSet.bio_sample_id]
 
 
 	### Using all of the variants within variantList, search for variants based on the start position, end position, and the call set ID's
-	### Then, for all of the found results, if the result start, end, and chromosome reference name matches the start, end, and chromosome
-	### reference name of the variants in variantList, append it to phaseVariantList
-	print("creating phaseVariantList")
+	### If a given callset possesses the search term the client is looking for (if genotype[0]==1), then the result is a match and its information
+	### is added to matchList
+
+	### The pagination feature is worked into the for loops as well; If the number of found results are greater than or equal to the number
+	### of results per page multiplied by the page the client wants then the result is appended to matchList, otherwise the loops are broken out of.
+	print("creating matchList")
 	matchList = []
 	phaseVariantList = []
 	nextPageNum = int(pageNumber)
 	for variant in variantList:
-		# print(variant)
-		print("merging to phase3 variants")
 		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, 
 			reference_name=variant.reference_name, call_set_ids=callSetIds)
 		for result in searchResults:
-			if len(phaseVariantList) == pageSize:
-				print("breaking out of outer loop")
+			if len(matchList) == pageSize:
 				break
 			for call in result.calls:
 				if call.genotype[0]==1 or call.genotype[1]==1:
-					#print(call)
+					### A human-friendly string is printed so that the client can easily see where matches were found.
 					readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneName+" at position "
 					 +str(variant.start)+" to "+str(variant.end))
 					print(readableString)
@@ -156,69 +142,16 @@ def pagedResults(geneName, soTerm,  pageNumber):
 					matchResult['biosample'] = p.toJsonDict(bioSampleDict[call.call_set_id])
 
 					resultCount += 1
-					
-					#print(str(len(phaseVariantList))+"=="+str(pageSize))
-					#print(str(resultCount)+">="+str(pageSize)+"*"+str(pageNumber))
-
-					#print("going into conditionals")
 					if len(matchList) == pageSize:
-						print("breaking inner loop")
 						nextPageNum+=1
-						print(nextPageNum,pageNumber)
 						if nextPageNum==int(pageNumber):
-							print("none")
 							nextPageNum=None
 						break
 					if resultCount>=(pageSize*int(pageNumber)):
-						print("appending")
 						matchList.append(matchResult)
 
 
-					#if result.start==variant.start and result.end==variant.end and result.reference_bases==variant.reference_bases:
-						#phaseVariantList.append(result)
-		#print(searchResults)
-
-	
-
-	#print(functionalList)
-	#print(len(functionalList))
-
-	
-	#print(phaseVariantList)
-
-	### If a given callset possesses the search term the user is looking for (if the genotype == 1), then the start point and end point
-	### are added to the matchResults dictionary. matchResults is the JSON that will be returned to the client. 
-	### A human-friendly string is printed so that the client can easily see where matches were found.
-	print("populating matchResults object")
-	
-	"""
-	resultCount = int(pageNumber)*pageSize
-	
-	for variant in phaseVariantList:
-		
-		bioSamplesList = []
-		for callSet in allCallSets:
-			if call.call_set_id == callSet.id:
-				bioSamplesList.append(c.get_bio_sample(callSet.bio_sample_id))
-		
-
-
-		for sample in bioSamplesList:
-			matchResults['biosample'] 	= p.toJsonDict(sample)
-			print(sample)
-		matchResults['result_number'] 	= resultCount
-
-		#print(matchResults)
-		#print(index)
-		matchList.append(matchResults)
-		resultCount+=1
-	"""
-
-	# next page token,
-	#	variant
-	#	biosample
-	# gene
-	# term (SO+readable term)
+	### Finally, the next page token, matchList, gene, term, and search ontology term are returned to the client as JSON
 	
 	print("returning")
 	return flask.jsonify({'next_page_token' : nextPageNum, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm})
