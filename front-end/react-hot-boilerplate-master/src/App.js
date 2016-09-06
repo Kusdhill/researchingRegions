@@ -9,7 +9,7 @@ export default class App extends Component {
 	render() {
 		return (
 			<Request
-        		url='https://api.github.com/users/kusdhill'
+        		url='http://localhost:5000/gene/APP/term/SO:0001630/page/0'
         		method='get'
         		accept='application/json'
         		verbose={true}
