@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
 import Request from 'react-http-request';
 
-var xhr = new XMLHttpRequest();
-xhr.open('GET', "http://ipinfo.io/json", true);
-var lol = xhr.send();
-
 export default class App extends Component {
 	render() {
 		return (
