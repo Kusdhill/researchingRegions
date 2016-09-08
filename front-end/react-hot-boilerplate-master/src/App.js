@@ -4,54 +4,19 @@ import Request from 'react-http-request';
 import $ from 'jquery';
 
 
-/*
-// sends request to gene search service
-export default class App extends Component {
-	render() {
-		return (
-			<Request
-				url='http://localhost:5000/gene/APP/term/SO:0001630/page/0'
-				method='get'
-				accept='application/json'
-				verbose={true}
-			>
-				{
-					({error, result, loading}) => {
-						if (loading) {
-							return <div>loading...</div>;
-						} else {
-							return <div>{ JSON.stringify(result) }</div>;
-						}
-					}
-				}
-			</Request>
-		)
-	}
-}
-*/
-
-
-
-
-
-
 //app
 export default class App extends Component{
 	render() {
 		return (
-			<HelloMessage />
+			<Listing />
 		)
 	}
 }
 
 
 
-// Testing
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 //listing
-class HelloMessage extends Component{
+class Listing extends Component{
 	constructor() {
 		super()
 		this.state = {
@@ -99,14 +64,9 @@ class HelloMessage extends Component{
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 /*
-
 // renders searchBox and results
 var App = React.createClass({
 	render: function(){
@@ -140,8 +100,4 @@ var resultItems = React.createClass({
 		return <li>"search result item"</li>;
 	}
 });
-
-
-
-ReactDOM.render(<app />, document.getElementById("content"));
 */
