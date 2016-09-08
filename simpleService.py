@@ -10,6 +10,8 @@
 
 import flask
 app = flask.Flask(__name__)
+from flask_cors import CORS, cross_origin
+CORS(app)
 import json
 
 import ga4gh.client as client
@@ -100,7 +102,7 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	bioSampleDict = {}
 	bioSamplesList = list(c.search_bio_samples(dataset.id))
 	bsIdToBsam = {}
-	for biosample in c.search_bio_samples(dataset.id):
+	for biosample in bioSamplesList:
 		bsIdToBsam[biosample.id] = biosample
 	allCallSets = list(c.search_call_sets(phaseVariantSet.id))
 
@@ -123,6 +125,8 @@ def pagedResults(geneName, soTerm,  pageNumber):
 	phaseVariantList = []
 	nextPageNum = int(pageNumber)
 	for variant in variantList:
+		if len(matchList) == pageSize:
+			break
 		searchResults = c.search_variants(phaseVariantSet.id, start=variant.start, end=variant.end, 
 			reference_name=variant.reference_name, call_set_ids=callSetIds)
 		for result in searchResults:
