@@ -4,12 +4,54 @@ import Request from 'react-http-request';
 import $ from 'jquery';
 
 
+
 //app
 export default class App extends Component{
 	render() {
 		return (
-			<Listing />
+			<div>
+				<Input />
+				<Search />
+			</div>
 		)
+	}
+}
+
+
+//input
+class Input extends Component{
+	render() {
+		return (
+			<form>
+				<input type="text" placeholder="Gene" />
+				<input type="text" placeholder="Term" />
+				<input type="text" placeholder="Page" />
+			</form>
+		);
+	}
+}
+
+
+
+//search
+class Search extends Component{
+	constructor() {
+		super()
+		this.state = {
+			clicked: false
+		}
+	}
+	render() {
+		if (this.state.clicked) {
+			return <Listing {... this.params} />
+		} else {
+			return (
+				<div>
+					<div>Please enter a query</div>
+					<input type="button" value="Search" onClick={this.setState({clicked: true})} />
+				</div>
+			)
+		}
 	}
 }
 
@@ -63,41 +105,3 @@ class Listing extends Component{
 		)
 	}
 }
-
-
-
-/*
-// renders searchBox and results
-var App = React.createClass({
-	render: function(){
-		return(
-			<div>
-				<searchBox />
-				<results />
-			</div>
-		);
-	}
-});
-
-
-
-// renders resultItems
-var results = React.createClass({
-	render: function(){
-		return(
-			<ul>
-				<resultItems />
-			</ul>
-		);
-	}
-});
-
-
-
-// renders search result items
-var resultItems = React.createClass({
-	render: function(){
-		return <li>"search result item"</li>;
-	}
-});
-*/
