@@ -22,11 +22,14 @@ export default class App extends Component{
 class Input extends Component{
 	render() {
 		return (
-			<form>
-				<input type="text" placeholder="Gene" />
-				<input type="text" placeholder="Term" />
-				<input type="text" placeholder="Page" />
-			</form>
+			<div>
+				<form>
+					<input type="text" placeholder="Gene" />
+					<input type="text" placeholder="Term" />
+					<input type="text" placeholder="Page" />
+				</form>
+				<br></br>
+			</div>
 		);
 	}
 }
@@ -39,7 +42,11 @@ class Search extends Component{
 		super()
 		this.state = {
 			clicked: false
-		}
+		};
+		this.handleClick = this.handleClick.bind(this);
+	}
+	handleClick() {
+		this.setState({clicked: true});
 	}
 	render() {
 		if (this.state.clicked) {
@@ -47,8 +54,7 @@ class Search extends Component{
 		} else {
 			return (
 				<div>
-					<div>Please enter a query</div>
-					<input type="button" value="Search" onClick={this.setState({clicked: true})} />
+					<input type="button" value="Search" onClick={this.handleClick} />
 				</div>
 			)
 		}
