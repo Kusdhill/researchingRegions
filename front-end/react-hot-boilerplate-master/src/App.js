@@ -18,6 +18,7 @@ export default class App extends Component{
 }
 
 
+
 //input
 class Input extends Component{
 	render() {
@@ -71,18 +72,19 @@ class Listing extends Component{
 			matches: []
 		}
 	}
-	loadFromServer(pageToken=null) {
+	loadFromServer(pageToken=0) {
+		console.log(pageToken)
 		let type = {'content-type': 'application/json'};
 		this.serverRequest = $.ajax({ 
-			url: "http://localhost:5000/gene/BRCA1/term/SO:0001630/page/0", 
+			url: "http://localhost:5000/gene/BRCA1/term/SO:0001630/page/"+(pageToken), 
 			type: "GET", 
 			dataType: "json", 
 			contentType: "application/json", 
 			success: (result) => {
 				this.setState({matches: this.state.matches.concat(result.matches)});
 
-				if (result.nextPageToken != "") {
-					this.loadFromServer(result.nextPageToken)
+				if (result.next_page_token != undefined) {
+					this.loadFromServer(result.next_page_token)
 				}
 			},
 			error: (xhr, status, err) => {
@@ -97,7 +99,6 @@ class Listing extends Component{
 		this.serverRequest.abort();
 	}
 	render() {
-		console.log(this.state.matches)
 		if (this.state.matches.length==0) {
 			return <div>loading...</div>
 		}
@@ -105,8 +106,13 @@ class Listing extends Component{
 		return (
 			<div>
 			{allMatches.map((matches) => {
-				return <div>{matches.biosample.name}</div>
-			})}
+				return(
+					<div>
+						{matches.biosample.name}
+					</div>
+
+				)
+			})};
 			</div>
 		)
 	}
