@@ -10,7 +10,10 @@ export default class App extends Component{
 	render() {
 		return (
 			<div>
-				<Input />
+				<Input 
+					geneSearch={Input.state.geneSearch}
+					termSearch={Input.state.termSearch}
+				/>
 				<Search />
 			</div>
 		)
@@ -21,13 +24,19 @@ export default class App extends Component{
 
 //input
 class Input extends Component{
+	constructor() {
+		super()
+		this.state = {
+			geneSearch: ''
+			termSearch: ''
+		};
+	}
 	render() {
 		return (
 			<div>
 				<form>
-					<input type="text" placeholder="Gene" />
-					<input type="text" placeholder="Term" />
-					<input type="text" placeholder="Page" />
+					<input type="text" placeholder="Gene" value={this.props.geneSearch} />
+					<input type="text" placeholder="Term" value={this.props.termSearch} />
 				</form>
 				<br></br>
 			</div>
@@ -72,18 +81,20 @@ class Listing extends Component{
 			matches: []
 		}
 	}
-	loadFromServer(pageToken=0) {
+	loadFromServer(userGene, userTerm, pageToken=0) {
 		console.log(pageToken)
 		let type = {'content-type': 'application/json'};
 		this.serverRequest = $.ajax({ 
-			url: "http://localhost:5000/gene/BRCA1/term/SO:0001630/page/"+(pageToken), 
+			url: "http://localhost:5000/gene/"+userGene+"/term/"+userTerm+"/page/"+pageToken, 
 			type: "GET", 
 			dataType: "json", 
-			contentType: "application/json", 
+			contentType: "application/json",
 			success: (result) => {
+				//console.log(this.url) how to do this?
 				this.setState({matches: this.state.matches.concat(result.matches)});
 
 				if (result.next_page_token != undefined) {
+					// keeps loading previous page in addition to next page, this may be a service issue
 					this.loadFromServer(result.next_page_token)
 				}
 			},
