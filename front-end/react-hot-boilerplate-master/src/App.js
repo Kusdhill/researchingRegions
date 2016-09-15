@@ -10,10 +10,7 @@ export default class App extends Component{
 	render() {
 		return (
 			<div>
-				<Input 
-					geneSearch={Input.state.geneSearch}
-					termSearch={Input.state.termSearch}
-				/>
+				<Input />
 				<Search />
 			</div>
 		)
@@ -24,19 +21,21 @@ export default class App extends Component{
 
 //input
 class Input extends Component{
-	constructor() {
-		super()
-		this.state = {
-			geneSearch: ''
-			termSearch: ''
-		};
+	handleChange() {
+		console.log("handling change")
+		console.log(this.refs.theGene.value)
+		console.log(this.refs.theTerm.value)
+		Search.props.render(
+			this.refs.theGene.value,
+			this.refs.theTerm.value
+		);
 	}
 	render() {
 		return (
 			<div>
 				<form>
-					<input type="text" placeholder="Gene" value={this.props.geneSearch} />
-					<input type="text" placeholder="Term" value={this.props.termSearch} />
+					<input type="text" placeholder="Gene" value={this.props.geneSearch} ref="theGene" />
+					<input type="text" placeholder="Term" value={this.props.termSearch} ref="theTerm" />
 				</form>
 				<br></br>
 			</div>
@@ -53,18 +52,19 @@ class Search extends Component{
 		this.state = {
 			clicked: false
 		};
-		this.handleClick = this.handleClick.bind(this);
+		this.handleSubmit = this.handleSubmit.bind(this);
 	}
-	handleClick() {
+	handleSubmit() {
+		Input.handleChange();
 		this.setState({clicked: true});
 	}
-	render() {
+	render(userGene, userTerm) {
 		if (this.state.clicked) {
 			return <Listing {... this.params} />
 		} else {
 			return (
 				<div>
-					<input type="button" value="Search" onClick={this.handleClick} />
+					<input type="button" value="Search" onClick={this.handleSubmit} />
 				</div>
 			)
 		}
