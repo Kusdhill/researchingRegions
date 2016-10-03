@@ -13,6 +13,7 @@ app = flask.Flask(__name__)
 from flask_cors import CORS, cross_origin
 CORS(app)
 import json
+import os.path
 
 import ga4gh.client as client
 import ga4gh.protocol as p
@@ -49,6 +50,18 @@ def pageOneResults(geneName, soTerm):
 ### pagedResults returns a paginated response, the client provides the page they would like to see
 @app.route('/gene/<geneName>/term/<soTerm>/page/<pageNumber>')
 def pagedResults(geneName, soTerm,  pageNumber):
+
+	print("checking if file exists")
+
+	filePath = "/Users/Kunal/Desktop/researchingRegions/BRCA1_0001630_1.JSON"
+	if os.path.isfile(filePath):
+		print("file exists, returning file")
+		with open(filePath) as data_file:
+			data = json.load(data_file)
+			theJson = flask.jsonify(data)
+		return(theJson)
+
+
 	resultCount = 0
 	pageSize = 20
 	pageCount = 0
@@ -135,10 +148,14 @@ def pagedResults(geneName, soTerm,  pageNumber):
 			for call in result.calls:
 				if call.genotype[0]==1 or call.genotype[1]==1:
 					### A human-friendly string is printed so that the client can easily see where matches were found.
-					readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneName+" at position "
-					 +str(variant.start)+" to "+str(variant.end))
-					print(readableString)
-					
+					#readableString = unicode(call.call_set_name+" has "+str(term)+" in gene "+geneName+" at position "
+					# +str(variant.start)+" to "+str(variant.end))
+					#print(readableString)
+
+					print(len(matchList))
+
+
+
 					matchResult = {}
 					v = p.toJsonDict(result)
 					del v['calls']
@@ -157,8 +174,15 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	### Finally, the next page token, matchList, gene, term, and search ontology term are returned to the client as JSON
 	
+	myJson = flask.jsonify({'next_page_token' : nextPageNum, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm})
+
+	print(myJson)
+	print("creating file")
+	with open(geneName+"_"+soTerm[3:10]+"_"+str(nextPageNum)+'.JSON','w') as outfile:
+		json.dump({'next_page_token' : nextPageNum, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm}, outfile)
+
 	print("returning")
-	return flask.jsonify({'next_page_token' : nextPageNum, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm})
+	return(myJson)
 
 if __name__ == '__main__':
 	app.debug = True  # helps figure out if something went wrong

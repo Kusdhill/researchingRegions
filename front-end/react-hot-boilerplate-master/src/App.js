@@ -114,9 +114,23 @@ class Listing extends Component{
 	}
 }
 
-const TextCell = ({rowIndex, data, cola, colb, ...props}) => (
+
+
+const TextCellAB = ({rowIndex, data, cola, colb, ...props}) => (
   <Cell {...props}>
     {data[rowIndex][cola][colb]}
+  </Cell>
+);
+
+const TextCellABC = ({rowIndex, data, cola, colb, colc, ...props}) => (
+  <Cell {...props}>
+    {data[rowIndex][cola][colb][colc]}
+  </Cell>
+);
+
+const TextCellArray = ({rowIndex, data, cola, colb, arrayIndex, ...props}) => (
+  <Cell {...props}>
+    {data[rowIndex][cola][colb][0]}
   </Cell>
 );
 
@@ -128,19 +142,59 @@ class Datatable extends Component{
 		//var link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + this.props.tableMatches.variant.names
 		//console.log(link)
 		return(
-			<Table
-				rowHeight={50}
-				headerHeight={50}
-				width={screen.width-100}
-				height={300}
-				rowsCount={this.props.tableMatches.length}>
-				<Column
-					header={<Cell>id</Cell>}
-					cell={<TextCell data={this.props.tableMatches} cola="biosample" colb="name" />}
-					columnKey="id"
-					width={200}
-				/>
-			</Table>
+			<div>
+				<br></br>
+				<br></br>
+				<Table
+					rowHeight={50}
+					headerHeight={50}
+					width={screen.width-100}
+					height={600}
+					rowsCount={this.props.tableMatches.length}>
+					<Column
+						header={<Cell>id</Cell>}
+						cell={<TextCellAB data={this.props.tableMatches} cola="biosample" colb="name" />}
+						columnKey="id"
+						width={100}
+					/>
+					<Column
+						header={<Cell>location</Cell>}
+						cell={<TextCellAB data={this.props.tableMatches} cola="biosample" colb="description" />}
+						columnKey="location"
+						width={300}
+					/>
+					<Column
+						header={<Cell>diseases</Cell>}
+						cell={<TextCellABC data={this.props.tableMatches} cola="biosample" colb="disease" colc="id" />}
+						columnKey="diseases"
+						width={200}
+					/>
+					<Column
+						header={<Cell>reference</Cell>}
+						cell={<TextCellAB data={this.props.tableMatches} cola="variant" colb="referenceBases" />}
+						columnKey="reference"
+						width={80}
+					/>
+					<Column
+						header={<Cell>alternate</Cell>}
+						cell={<TextCellArray data={this.props.tableMatches} cola="variant" colb="alternateBases" arrayIndex="0" />}
+						columnKey="alternate"
+						width={80}
+					/>
+					<Column
+						header={<Cell>SNP</Cell>}
+						cell={<TextCellArray data={this.props.tableMatches} cola="variant" colb="names" arrayIndex="0" />}
+						columnKey="SNP"
+						width={200}
+					/>
+					<Column
+						header={<Cell>start</Cell>}
+						cell={<TextCellAB data={this.props.tableMatches} cola="variant" colb="start" />}
+						columnKey="start"
+						width={200}
+					/>
+				</Table>
+			</div>
 		)
 	}
 }
