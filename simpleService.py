@@ -13,9 +13,11 @@ app = flask.Flask(__name__)
 from flask_cors import CORS, cross_origin
 CORS(app)
 import json
-import os.path
+import os
 
-import ga4gh.client as client
+
+from ga4gh.client import client
+#import ga4gh.client as client
 import ga4gh.protocol as p
 
 
@@ -53,13 +55,14 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	print("checking if file exists")
 
-	filePath = "/Users/Kunal/Desktop/researchingRegions/BRCA1_0001630_1.JSON"
+	filePath = "/Users/Kunal/Desktop/researchingRegions/"+geneName+"_"+soTerm[3:10]+"_"+pageNumber+".JSON"
 	if os.path.isfile(filePath):
 		print("file exists, returning file")
 		with open(filePath) as data_file:
 			data = json.load(data_file)
 			theJson = flask.jsonify(data)
 		return(theJson)
+	print("file does not exist, continuing execution")
 
 
 	resultCount = 0
@@ -178,12 +181,40 @@ def pagedResults(geneName, soTerm,  pageNumber):
 
 	print(myJson)
 	print("creating file")
-	with open(geneName+"_"+soTerm[3:10]+"_"+str(nextPageNum)+'.JSON','w') as outfile:
+	with open(geneName+"_"+soTerm[3:10]+"_"+str(nextPageNum-1)+'.JSON','w') as outfile:
 		json.dump({'next_page_token' : nextPageNum, 'matches' : matchList, 'gene' : geneName, 'term' : term, 'search_ontology_term' : soTerm}, outfile)
 
 	print("returning")
 	return(myJson)
 
+
+
+### Threading
+from multiprocessing import Queue, Process
+@app.route('/multiprocessing')
+def testResults():
+	print("Testing")
+
+	todo = Queue()
+	done = Queue()
+	workers = 20
+	processes = []
+
+
+	simpleJson = flask.jsonify({'test' : 'result'})
+	return(simpleJson)
+
+
+
+
+
 if __name__ == '__main__':
 	app.debug = True  # helps figure out if something went wrong
 	app.run()         # starts the server and keeps it running
+	
+	### Threading	
+	processOne = Process(target=testResultsOne)
+	processTwo = Process(target=testResultsTwo)
+
+	processOne.start()
+	processTwo.start()
